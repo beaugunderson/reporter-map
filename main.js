@@ -14,14 +14,6 @@ import './style.css';
 
 // TODO add kernel density map to estimate propagation?
 
-const map = L.map('map').setView([0, 0], 3);
-
-L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap',
-  maxZoom: 19,
-  noWrap: true,
-}).addTo(map);
-
 // transform a spot from MQTT to an object with long attribute names merely to
 // make the code more readable
 function transform(packet) {
@@ -56,6 +48,23 @@ const BANDS = [
   '80m',
   '160m',
 ];
+
+const osm = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap',
+  maxZoom: 19,
+  noWrap: true,
+});
+
+const map = L.map('map', { center: [0, 0], zoom: 3, layers: [osm] });
+
+const LAYER_GROUPS = {};
+
+for (const band of BANDS) {
+  LAYER_GROUPS[band] = L.featureGroup();
+  map.addLayer(LAYER_GROUPS[band]);
+}
+
+L.control.layers({ OpenStreeMap: osm }, LAYER_GROUPS).addTo(map);
 
 // from http://vrl.cs.brown.edu/color; could make this a gradient instead?
 const BAND_COLORS = [
@@ -94,6 +103,11 @@ client.on('error', (err) => console.error(err));
 client.on('message', (_, message) => {
   const report = transform(JSON.parse(message.toString()));
 
+  if (!LAYER_GROUPS[report.band]) {
+    console.log('Missing band', report.band);
+    return;
+  }
+
   const [senderLat, senderLon] = locatorToLatLng(report.locatorSender);
   const [receiverLat, receiverLon] = locatorToLatLng(report.locatorReceiver);
 
@@ -104,10 +118,6 @@ client.on('message', (_, message) => {
 
   const index = BANDS.indexOf(report.band);
 
-  if (index === -1) {
-    console.log('Band without corresponding color:', report.band);
-  }
-
   // sometimes we get nonsensical paths, e.g. when the sende/receiver grids are the same
   if (arc.geometry.coordinates.some(([a, b]) => Number.isNaN(a) || Number.isNaN(b))) {
     return;
@@ -115,5 +125,5 @@ client.on('message', (_, message) => {
 
   L.geoJSON(arc)
     .setStyle({ color: BAND_COLORS[index] ?? 'black', opacity: 0.75, weight: 1 })
-    .addTo(map);
+    .addTo(LAYER_GROUPS[report.band]);
 });
