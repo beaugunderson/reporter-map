@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base=/reporter-map/",
+    "build": "vite build --base=/reporter-map/ && rm -rf ~/p/ny7hf.radio/reporter-map && mv dist ~/p/n7yhf/reporter-map",
     "preview": "vite preview"
   },
   "devDependencies": {

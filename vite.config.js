@@ -1,19 +1,19 @@
-import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
-import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 
-import rollupNodePolyFill from "rollup-plugin-node-polyfills";
+import rollupNodePolyFill from 'rollup-plugin-node-polyfills';
 
 export default {
   resolve: {
     alias: {
-      events: "rollup-plugin-node-polyfills/polyfills/events",
+      events: 'rollup-plugin-node-polyfills/polyfills/events',
     },
   },
 
   optimizeDeps: {
     esbuildOptions: {
       define: {
-        global: "globalThis",
+        global: 'globalThis',
       },
 
       plugins: [
@@ -30,5 +30,7 @@ export default {
     rollupOptions: {
       plugins: [rollupNodePolyFill()],
     },
+
+    sourcemap: true,
   },
 };
